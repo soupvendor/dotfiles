@@ -1,0 +1,10 @@
+--smart-case
+--hidden
+--glob=!.git/*
+--glob=!node_modules/*
+--glob=!.DS_Store
+--glob=!*.lock
+--colors=line:fg:yellow
+--colors=path:fg:cyan
+--colors=match:fg:red
+--colors=match:style:bold
