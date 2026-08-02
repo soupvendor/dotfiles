@@ -138,8 +138,8 @@ alias gd='git diff'
 alias gco='git checkout'
 alias gb='git branch'
 alias gpl='git pull'
-alias gpu='git push --upstream origin/$(git rev-parse --abbrev-ref HEAD)'
-alias gpr='gh pr create --fill'
+alias gpu='git push -u origin $(git rev-parse --abbrev-ref HEAD)'
+alias gpr='gh pr create --fill -w'
 
 # navigation
 alias ..='cd ..'
