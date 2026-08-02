@@ -1,0 +1,228 @@
+# =============================================================================
+# ~/.dotfiles/.config/mise/config.toml
+#
+# The whole machine, in one file. Symlinked to ~/.config/mise by the [dotfiles]
+# entry below, which makes it mise's GLOBAL config — so [tools] are on PATH
+# everywhere, and the file is implicitly trusted (untrusted configs have their
+# [dotfiles] section silently skipped).
+#
+#   mise bootstrap             converge this machine
+#   mise bootstrap --dry-run   preview what would change
+#   mise bootstrap status      show what has drifted
+#   mise run up                upgrade tools and refresh the lockfile
+#
+# Cold start on a new machine — see README.md:
+#   git clone <repo> ~/.dotfiles
+#   curl https://mise.run | sh
+#   mkdir -p ~/.config && ln -s ~/.dotfiles/.config/mise ~/.config/mise
+#   ~/.local/bin/mise bootstrap --yes
+# =============================================================================
+
+min_version = "2026.7.0"
+
+# -----------------------------------------------------------------------------
+# Settings
+# -----------------------------------------------------------------------------
+[settings]
+# Record exact versions, URLs, and checksums in a lockfile beside this config.
+# "latest" then means "whatever `mise run up` last resolved" — identical on
+# every machine — instead of "whatever exists on install day".
+lockfile = true
+# Resolve for both machines from either one, so locking on Linux still emits
+# usable macOS entries.
+lockfile_platforms = ["linux-x64", "macos-arm64"]
+
+# Entries in [dotfiles] that omit `source` are mirrored from their
+# home-relative target path under this root. Keep ~/.dotfiles a SYMLINK to the
+# real checkout rather than pointing this at the checkout directly — then
+# relocating the repo is one `ln -sfn` instead of re-linking everything.
+dotfiles.root = "~/.dotfiles"
+dotfiles.default_mode = "symlink"
+
+# -----------------------------------------------------------------------------
+# Tools — everything mise can supply. Exact versions live in the lockfile.
+# -----------------------------------------------------------------------------
+[tools]
+# Runtimes are pinned to a major line on purpose. Floating "lts"/"latest"
+# re-resolves at every major cutover without you noticing; bump these by hand.
+node   = "24"
+python = "3.14"
+
+# Shell & terminal
+starship = "latest"
+tmux     = "latest"
+
+# Modern CLI replacements
+eza     = "latest"    # ls — the only tool with no macos-arm64 entry in the
+                      # lockfile (its aqua package publishes no macOS asset), so
+                      # it re-resolves at install time on a Mac
+
+bat     = "latest"    # cat
+fd      = "latest"    # find
+ripgrep = "latest"    # grep
+sd      = "latest"    # sed
+zoxide  = "latest"    # cd
+
+# Fuzzy finder & navigation
+fzf  = "latest"
+yazi = "latest"
+
+# Git
+delta   = "latest"    # registry name is `delta`, not `git-delta`
+lazygit = "latest"
+gh      = "latest"
+
+# History & per-directory env
+atuin  = "latest"
+direnv = "latest"
+
+# Misc
+jq   = "latest"
+just = "latest"       # for other people's Justfiles; this repo uses [tasks]
+
+# -----------------------------------------------------------------------------
+# Dotfiles — replaces GNU Stow.
+#
+# `source` is omitted everywhere: mise mirrors the home-relative target path
+# under dotfiles.root, which is exactly how this repo is laid out. Nothing here
+# depends on where this config file itself happens to sit.
+#
+# mise refuses to replace files it does not manage, so a first run on a machine
+# with pre-existing configs stops and names them rather than clobbering them.
+# -----------------------------------------------------------------------------
+[dotfiles]
+"~/.zshrc"                           = { mode = "symlink" }
+"~/.zprofile"                        = { mode = "symlink" }
+"~/.tmux.conf"                       = { mode = "symlink" }
+# Whole directory, so the generated lockfile lands inside the repo too.
+"~/.config/mise"                     = { mode = "symlink" }
+"~/.config/starship.toml"            = { mode = "symlink" }
+"~/.config/ripgrep/ripgreprc"        = { mode = "symlink" }
+"~/.config/alacritty/alacritty.toml" = { mode = "symlink" }
+
+# -----------------------------------------------------------------------------
+# System packages — ONLY what mise cannot supply from [tools] above.
+#
+# mise skips entries whose manager is absent from the host, so every platform
+# coexists in one block. This replaces the four inconsistent package-manager
+# branches the old install.sh carried.
+# -----------------------------------------------------------------------------
+[bootstrap.packages]
+
+# git — not in the mise registry.
+# Deliberately no "brew:git": mise treats brew as installable on Linux too, and
+# that entry alone provokes a full linuxbrew bootstrap (sudo mkdir
+# /home/linuxbrew, pour git + 4 deps) on a host that already has git from dnf.
+# macOS gets git from the Xcode Command Line Tools, which Homebrew requires
+# anyway. The brew-cask entries below are correctly skipped off macOS.
+"apt:git"    = "latest"
+"dnf:git"    = "latest"
+"pacman:git" = "latest"
+"apk:git"    = "latest"
+
+# zsh — not in the mise registry, and it is the login shell
+"apt:zsh"    = "latest"
+"dnf:zsh"    = "latest"
+"pacman:zsh" = "latest"
+"apk:zsh"    = "latest"
+# macOS ships /bin/zsh; no brew entry needed.
+
+# Build toolchain — needed when mise has to compile rather than download a
+# prebuilt (source Python builds, cargo backend fallbacks). No-op when present.
+"apt:build-essential" = "latest"
+"dnf:gcc"             = "latest"
+"dnf:make"            = "latest"
+"pacman:base-devel"   = "latest"
+"apk:build-base"      = "latest"
+
+# unzip — used by the bootstrap task below for the Nerd Font
+"apt:unzip"    = "latest"
+"dnf:unzip"    = "latest"
+"pacman:unzip" = "latest"
+"apk:unzip"    = "latest"
+
+# Terminal emulator. Native packages everywhere — Alacritty is not on Flathub,
+# so the Flatpak path the old install.sh took never actually worked.
+"apt:alacritty"       = "latest"
+"dnf:alacritty"       = "latest"
+"pacman:alacritty"    = "latest"
+"brew-cask:alacritty" = "latest"
+
+# Nerd Font — macOS only. No distro ships a patched Nerd variant, so Linux gets
+# it from [tasks.bootstrap] below. (homebrew/cask-fonts folded into
+# homebrew/cask in 2024, so the old tap is gone.)
+"brew-cask:font-jetbrains-mono-nerd-font" = "latest"
+
+# -----------------------------------------------------------------------------
+# Git repos — replaces the TPM clone in install.sh
+# -----------------------------------------------------------------------------
+[bootstrap.repos]
+"~/.tmux/plugins/tpm" = { url = "https://github.com/tmux-plugins/tpm", ref = "master" }
+
+# -----------------------------------------------------------------------------
+# Login shell — replaces the chsh block in install.sh. mise appends the path to
+# /etc/shells if missing, then chsh's. /bin/zsh exists on macOS and on every
+# usr-merged Linux, so one literal covers both.
+# -----------------------------------------------------------------------------
+[bootstrap.user]
+login_shell = "/bin/zsh"
+
+# -----------------------------------------------------------------------------
+# [bootstrap.mise_shell_activate] is deliberately NOT set.
+#
+# It would edit ~/.zshrc in place — but ~/.zshrc is already owned by [dotfiles]
+# above. Either mise follows the symlink and dirties this repo on every machine,
+# or it writes atomically and replaces the symlink with a real file, which the
+# next bootstrap's dotfiles step would then refuse to relink. One file, one
+# owner: the activation eval stays hand-written in .zshrc.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Imperative leftovers. Runs on EVERY bootstrap — keep it idempotent.
+# -----------------------------------------------------------------------------
+[tasks.bootstrap]
+description = "Nerd Font (Linux) + tmux plugins"
+run = '''
+set -euo pipefail
+
+# --- JetBrainsMono Nerd Font (Linux only; macOS gets the cask above) ---
+# Guarded by a version stamp rather than mere directory existence, so bumping
+# nf_version actually reinstalls and the no-op case is a single `cat`.
+if [ "$(uname -s)" = "Linux" ]; then
+  nf_version="v3.4.0"
+  font_dir="${XDG_DATA_HOME:-$HOME/.local/share}/fonts/JetBrainsMonoNerdFont"
+  stamp="$font_dir/.mise-nerd-font-version"
+  if [ "$(cat "$stamp" 2>/dev/null || true)" != "$nf_version" ]; then
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    curl -fsSL -o "$tmp/font.zip" \
+      "https://github.com/ryanoasis/nerd-fonts/releases/download/${nf_version}/JetBrainsMono.zip"
+    rm -rf "$font_dir"
+    mkdir -p "$font_dir"
+    unzip -qo "$tmp/font.zip" -d "$font_dir"
+    printf '%s\n' "$nf_version" > "$stamp"
+    fc-cache -f "$font_dir" >/dev/null
+    echo "installed JetBrainsMono Nerd Font ${nf_version}"
+  fi
+fi
+
+# --- tmux plugins (TPM itself is cloned by [bootstrap.repos]) ---
+if [ -x "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
+  "$HOME/.tmux/plugins/tpm/bin/install_plugins" >/dev/null
+fi
+'''
+
+# -----------------------------------------------------------------------------
+# Maintenance — runnable from anywhere, since this is the global config
+# -----------------------------------------------------------------------------
+[tasks.up]
+description = "Upgrade tools, refresh the lockfile, upgrade system packages"
+run = [
+  "mise upgrade",
+  "mise lock",
+  "mise bootstrap packages upgrade",
+]
+
+[tasks.check]
+description = "Show everything that has drifted from this config"
+run = "mise bootstrap status"

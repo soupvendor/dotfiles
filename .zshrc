@@ -1,5 +1,7 @@
 # =========================================
 # PATH
+# Intentionally repeats the .zprofile prepend: .zprofile only runs for LOGIN
+# shells, and the mise activation below needs ~/.local/bin on PATH regardless.
 # =========================================
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 
@@ -22,6 +24,8 @@ autoload -Uz compinit
 compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+# LS_COLORS is not set by anything else here, so seed it before using it below.
+command -v dircolors &>/dev/null && eval "$(dircolors -b)"
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 
 # =========================================
@@ -32,7 +36,12 @@ setopt NO_BEEP
 setopt INTERACTIVE_COMMENTS
 
 # =========================================
-# mise (runtime version manager)
+# mise (runtime version manager + this machine's bootstrap)
+#
+# Managed by hand, NOT by [bootstrap.mise_shell_activate] — this file is
+# symlinked from the dotfiles repo, and letting mise edit it in place would
+# either dirty the repo on every machine or replace the symlink with a real
+# file, which the next `mise bootstrap` would then refuse to relink.
 # =========================================
 if command -v mise &>/dev/null; then
   eval "$(mise activate zsh)"
@@ -112,11 +121,6 @@ if command -v yazi &>/dev/null; then
     cwd="$(cat -- "$tmp")" && [[ -n "$cwd" && "$cwd" != "$PWD" ]] && cd -- "$cwd"
     rm -f -- "$tmp"
   }
-fi
-
-# alacritty (Flatpak — not in PATH by default)
-if command -v flatpak &>/dev/null && flatpak info org.alacritty.Alacritty &>/dev/null; then
-  alias alacritty='flatpak run org.alacritty.Alacritty'
 fi
 
 # lazygit
