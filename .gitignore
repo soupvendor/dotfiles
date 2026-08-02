@@ -1,2 +1,6 @@
 .DS_Store
 *.local
+
+# `mise settings set` writes here, and ~/.config/mise is a symlink into this
+# repo — so machine-local settings would otherwise show up as commits.
+.config/mise/settings.toml
