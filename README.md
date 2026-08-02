@@ -89,6 +89,7 @@ dotfiles/
 - **[lazygit](https://github.com/jesseduffield/lazygit)** — terminal git UI (`lg`)
 - **[atuin](https://github.com/atuinsh/atuin)** — shell history with fuzzy search and optional sync
 - **[yazi](https://github.com/sxyazi/yazi)** — blazing-fast terminal file manager (`y`)
+- **[lazydocker](https://github.com/jesseduffield/lazydocker)** — terminal UI for containers, images, and logs
 - **[gh](https://cli.github.com)** — GitHub CLI
 - **[direnv](https://direnv.net)** — auto-load `.envrc` per directory
 - **[just](https://github.com/casey/just)** — command runner, for other people's Justfiles
@@ -164,6 +165,14 @@ in your terminal so icons render.
   Inspect it (`ls -la <path>`), then re-run with the flag once you're sure it's
   disposable.
 - **Moved the repo** — `ln -sfn <new path> ~/.dotfiles`, then `mise bootstrap`.
+- **A package fails with "no match" even though a `pre-packages` hook adds its
+  repo** — you probably ran `mise bootstrap packages apply`. The
+  `mise bootstrap <part> apply` subcommands apply only that table and **do not
+  run hooks**; hooks belong to the top-level orchestration and are bound to
+  their phase, and there is no `hooks` value for `--only`/`--skip`. Use
+  `mise bootstrap`, or `mise bootstrap --only packages`.
+- **`docker ps` says permission denied** — the group add in `[tasks.bootstrap]`
+  needs a fresh login. `newgrp docker` fixes the current shell.
 
 ## Tmux plugins
 

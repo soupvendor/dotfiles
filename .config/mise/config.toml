@@ -72,6 +72,9 @@ delta   = "latest"    # registry name is `delta`, not `git-delta`
 lazygit = "latest"
 gh      = "latest"
 
+# Containers — TUI dashboard for the docker-ce daemon installed below
+lazydocker = "latest"
+
 # History & per-directory env
 atuin  = "latest"
 direnv = "latest"
@@ -99,6 +102,25 @@ just = "latest"       # for other people's Justfiles; this repo uses [tasks]
 "~/.config/starship.toml"            = { mode = "symlink" }
 "~/.config/ripgrep/ripgreprc"        = { mode = "symlink" }
 "~/.config/alacritty/alacritty.toml" = { mode = "symlink" }
+
+# -----------------------------------------------------------------------------
+# Third-party package repos, added before the packages step needs them.
+#
+# GOTCHA: this hook runs only as part of the full bootstrap orchestration.
+#   mise bootstrap                 runs it
+#   mise bootstrap --only packages runs it
+#   mise bootstrap packages apply  DOES NOT — the subcommand applies just the
+#                                  table, so docker-ce fails with "no match"
+# There is no `hooks` value for --only/--skip; hooks are bound to their phase.
+# Use the full `mise bootstrap` (or --only packages) whenever a package depends
+# on a repo added here.
+# -----------------------------------------------------------------------------
+[bootstrap.hooks.pre-packages]
+run = '''
+if command -v dnf >/dev/null && [ ! -f /etc/yum.repos.d/docker-ce.repo ]; then
+  sudo dnf -y config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
+fi
+'''
 
 # -----------------------------------------------------------------------------
 # System packages — ONLY what mise cannot supply from [tools] above.
@@ -152,6 +174,21 @@ just = "latest"       # for other people's Justfiles; this repo uses [tasks]
 # it from [tasks.bootstrap] below. (homebrew/cask-fonts folded into
 # homebrew/cask in 2024, so the old tap is gone.)
 "brew-cask:font-jetbrains-mono-nerd-font" = "latest"
+"dnf:docker-ce"              = "latest"
+"dnf:docker-ce-cli"          = "latest"
+"dnf:containerd.io"          = "latest"
+"dnf:docker-compose-plugin"  = "latest"
+"brew-cask:docker"           = "latest"   # Docker Desktop on macOS
+
+# Container GUI. Podman Desktop talks to the Docker socket as well as podman, so
+# it manages the docker-ce daemon above — and unlike Docker Desktop for Linux it
+# is packaged (Flathub), so it needs no download hook and creates no rival
+# `desktop-linux` CLI context to confuse `docker ps`.
+"flatpak:io.podman_desktop.PodmanDesktop" = "latest"
+
+# Spotify
+"flatpak:com.spotify.Client" = "latest"
+"brew-cask:spotify"          = "latest"
 
 # -----------------------------------------------------------------------------
 # Git repos — replaces the TPM clone in install.sh
@@ -181,7 +218,7 @@ login_shell = "/bin/zsh"
 # Imperative leftovers. Runs on EVERY bootstrap — keep it idempotent.
 # -----------------------------------------------------------------------------
 [tasks.bootstrap]
-description = "Nerd Font (Linux) + tmux plugins"
+description = "Nerd Font (Linux) + tmux plugins + Docker daemon/group"
 run = '''
 set -euo pipefail
 
@@ -209,6 +246,25 @@ fi
 # --- tmux plugins (TPM itself is cloned by [bootstrap.repos]) ---
 if [ -x "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
   "$HOME/.tmux/plugins/tpm/bin/install_plugins" >/dev/null
+fi
+
+# --- Docker: the part [bootstrap.packages] can't do ---
+# Installing docker-ce leaves the daemon disabled and the socket root-owned, so
+# `docker ps` fails until both of these run. Neither fits a declarative section:
+# docker.service is a SYSTEM unit, so [bootstrap.linux.systemd.units] (which
+# manages user units) can't enable it.
+#
+# Both lines are guarded because this task runs on every bootstrap.
+#
+# NOTE: the docker group is root-equivalent — a member can bind-mount / into a
+# container as root. Accepted here for a single-user workstation. Podman is
+# installed and rootless if you'd rather not grant it; drop the usermod line and
+# the daemon still works under sudo.
+#
+# Group membership needs a fresh login (or `newgrp docker`) to take effect.
+if command -v dockerd >/dev/null; then
+  systemctl is-enabled docker >/dev/null 2>&1 || sudo systemctl enable --now docker
+  id -nG "$USER" | tr ' ' '\n' | grep -qx docker || sudo usermod -aG docker "$USER"
 fi
 '''
 
