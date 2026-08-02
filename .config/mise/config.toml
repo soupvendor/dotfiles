@@ -106,12 +106,16 @@ just = "latest"       # for other people's Justfiles; this repo uses [tasks]
 # -----------------------------------------------------------------------------
 [bootstrap.packages]
 
-# git — not in the mise registry
+# git — not in the mise registry.
+# Deliberately no "brew:git": mise treats brew as installable on Linux too, and
+# that entry alone provokes a full linuxbrew bootstrap (sudo mkdir
+# /home/linuxbrew, pour git + 4 deps) on a host that already has git from dnf.
+# macOS gets git from the Xcode Command Line Tools, which Homebrew requires
+# anyway. The brew-cask entries below are correctly skipped off macOS.
 "apt:git"    = "latest"
 "dnf:git"    = "latest"
 "pacman:git" = "latest"
 "apk:git"    = "latest"
-"brew:git"   = "latest"
 
 # zsh — not in the mise registry, and it is the login shell
 "apt:zsh"    = "latest"
