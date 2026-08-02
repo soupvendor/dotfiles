@@ -53,7 +53,10 @@ starship = "latest"
 tmux     = "latest"
 
 # Modern CLI replacements
-eza     = "latest"    # ls
+eza     = "latest"    # ls — the only tool with no macos-arm64 entry in the
+                      # lockfile (its aqua package publishes no macOS asset), so
+                      # it re-resolves at install time on a Mac
+
 bat     = "latest"    # cat
 fd      = "latest"    # find
 ripgrep = "latest"    # grep

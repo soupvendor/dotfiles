@@ -123,6 +123,16 @@ Runtimes are pinned to a major line (`node = "24"`, `python = "3.14"`) rather
 than `lts`/`latest`, because those re-resolve across major cutovers silently.
 To update: edit the pin, run `mise run up`, commit the lockfile diff.
 
+Two caveats worth knowing:
+
+- mise never *creates* a lockfile on its own — it only maintains one that
+  already exists. `mise.lock` is committed here, so a fresh clone is fine. If it
+  ever goes missing, `touch .config/mise/mise.lock && mise install` reseeds it,
+  then `mise lock` fills in the other platform. (The name is `mise.lock`, not
+  `config.lock`.)
+- `eza` is the one tool with no `macos-arm64` entry — its registry package
+  publishes no macOS asset, so it re-resolves at install time on a Mac.
+
 ## Font
 
 JetBrainsMono Nerd Font installs automatically — a Homebrew cask on macOS, a
