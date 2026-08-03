@@ -1,0 +1,14 @@
+// VSCode keybinding overrides.
+//
+// VSCode's integrated terminal intercepts some keys before the shell sees them.
+// Removing a binding with a "-" command prefix plus "when": "terminalFocus"
+// releases the key to zsh *only* while the terminal is focused — the binding
+// still works everywhere else in the editor.
+[
+  // Ctrl+E — Quick Open in the editor, end-of-line in the terminal.
+  {
+    "key": "ctrl+e",
+    "command": "-workbench.action.quickOpen",
+    "when": "terminalFocus"
+  }
+]

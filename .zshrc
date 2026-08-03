@@ -36,6 +36,53 @@ setopt NO_BEEP
 setopt INTERACTIVE_COMMENTS
 
 # =========================================
+# Keybindings
+#
+# Line editing lives here, not in alacritty or tmux. The terminal only decides
+# which escape sequence a key sends; zsh's ZLE decides what that sequence does.
+#
+# To discover the sequence a key sends: press Ctrl+V, then the key. Whatever is
+# echoed is what you pass to bindkey. `bindkey "^A"` shows the current binding,
+# `bindkey` alone lists every binding.
+#
+# Placed before the tool activations below on purpose: fzf and atuin rebind ^R
+# and ^T, and should win over anything set here.
+# =========================================
+bindkey -e   # emacs keymap, explicitly — don't inherit it from $EDITOR
+
+# Word-motion boundaries. Zsh's default WORDCHARS counts / - . = as part of a
+# word, so Ctrl+W on /home/nick/code/projects kills the entire path. Dropping
+# them makes word motion stop at each path segment, which is almost always what
+# you want when editing a command line.
+WORDCHARS='*?_[]~&;!#$%^(){}<>'
+
+# Ctrl + arrow — skip whole words. Multiple sequences because terminals differ
+# (alacritty/xterm send ^[[1;5C, some send ^[[5C, rxvt sends ^[Oc); binding all
+# of them is harmless and makes this portable to the Mac.
+for k in '^[[1;5C' '^[[5C' '^[Oc' '^[^[[C'; do bindkey "$k" forward-word;  done
+for k in '^[[1;5D' '^[[5D' '^[Od' '^[^[[D'; do bindkey "$k" backward-word; done
+
+# Home / End, including the variants tmux and terminfo hand over
+for k in '^[[H' '^[[1~' '^[OH' "${terminfo[khome]}"; do
+  [[ -n "$k" ]] && bindkey "$k" beginning-of-line
+done
+for k in '^[[F' '^[[4~' '^[OF' "${terminfo[kend]}"; do
+  [[ -n "$k" ]] && bindkey "$k" end-of-line
+done
+
+# Delete, and Ctrl+Backspace / Ctrl+Delete for word-wise deletion
+bindkey '^[[3~'   delete-char
+bindkey '^H'      backward-kill-word    # Ctrl+Backspace
+bindkey '^[[3;5~' kill-word             # Ctrl+Delete
+
+# Ctrl+A / Ctrl+E are already beginning-of-line / end-of-line in the emacs
+# keymap. Listed here only so the file documents them; to move them elsewhere,
+# rebind the widget rather than deleting these:
+#   bindkey '^[[1;3D' beginning-of-line   # e.g. Alt+Left instead
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+
+# =========================================
 # mise (runtime version manager + this machine's bootstrap)
 #
 # Managed by hand, NOT by [bootstrap.mise_shell_activate] — this file is

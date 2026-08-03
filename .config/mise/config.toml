@@ -102,6 +102,9 @@ just = "latest"       # for other people's Justfiles; this repo uses [tasks]
 "~/.config/starship.toml"            = { mode = "symlink" }
 "~/.config/ripgrep/ripgreprc"        = { mode = "symlink" }
 "~/.config/alacritty/alacritty.toml" = { mode = "symlink" }
+# VSCode: keybindings.json only. settings.json is deliberately NOT tracked —
+# extensions rewrite it on install, so it would churn on every machine.
+"~/.config/Code/User/keybindings.json" = { mode = "symlink" }
 
 # -----------------------------------------------------------------------------
 # Third-party package repos, added before the packages step needs them.
