@@ -151,6 +151,50 @@ alias reload='source ~/.zshrc'
 alias q='exit'
 
 # =========================================
+# zsh-autosuggestions (grey inline suggestion from history)
+# Must be sourced before zsh-syntax-highlighting.
+# =========================================
+if [[ -f "$HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; then
+  source "$HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh"
+  ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#565f89'   # Tokyo Night comment grey
+fi
+
+# =========================================
 # Local overrides (not tracked in git)
 # =========================================
 [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
+
+# =========================================
+# zsh-syntax-highlighting — MUST BE LAST.
+#
+# It wraps every ZLE widget that exists at source time, so anything binding
+# widgets later is invisible to it. fzf, atuin, and .zshrc.local all bind
+# widgets above, which is why this sits below them and not with the other
+# tool activations.
+#
+# Highlighters, in order of what they catch:
+#   main     — command validity (green = resolves, red = not found), plus
+#              quoting, redirection, and option syntax
+#   brackets — unmatched or mismatched (), {}, [] while scripting
+#   pattern  — literal strings worth flagging (see rm -rf below)
+# =========================================
+if [[ -f "$HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]]; then
+  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern)
+  source "$HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
+  # Tokyo Night, matching the fzf palette above
+  ZSH_HIGHLIGHT_STYLES[command]='fg=#9ece6a'              # resolves — green
+  ZSH_HIGHLIGHT_STYLES[builtin]='fg=#9ece6a'
+  ZSH_HIGHLIGHT_STYLES[function]='fg=#9ece6a'
+  ZSH_HIGHLIGHT_STYLES[alias]='fg=#9ece6a'
+  ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=#f7768e,bold'   # not found — red
+  ZSH_HIGHLIGHT_STYLES[path]='fg=#c0caf5,underline'
+  ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=#e0af68'
+  ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=#e0af68'
+  ZSH_HIGHLIGHT_STYLES[comment]='fg=#565f89'
+
+  # Flag destructive commands before you hit enter
+  typeset -gA ZSH_HIGHLIGHT_PATTERNS
+  ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'fg=#1a1b26,bg=#f7768e,bold')
+fi

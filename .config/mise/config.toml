@@ -196,6 +196,13 @@ fi
 [bootstrap.repos]
 "~/.tmux/plugins/tpm" = { url = "https://github.com/tmux-plugins/tpm", ref = "master" }
 
+# zsh plugins. Cloned rather than packaged: Fedora puts these under
+# /usr/share/... and Homebrew under $(brew --prefix)/share/..., so packaging
+# them would mean a path-search loop in .zshrc. A clone is one path everywhere.
+# Pinned to release tags — unlike TPM these are sourced into every shell.
+"~/.zsh/zsh-syntax-highlighting" = { url = "https://github.com/zsh-users/zsh-syntax-highlighting", ref = "0.8.0" }
+"~/.zsh/zsh-autosuggestions"     = { url = "https://github.com/zsh-users/zsh-autosuggestions",     ref = "v0.7.1" }
+
 # -----------------------------------------------------------------------------
 # Login shell — replaces the chsh block in install.sh. mise appends the path to
 # /etc/shells if missing, then chsh's. /bin/zsh exists on macOS and on every
