@@ -48,15 +48,21 @@ dotfiles/
 ├── mise/
 │   ├── config.toml         settings + tools → symlinked to ~/.config/mise
 │   └── mise.lock           generated, committed
-├── alacritty/alacritty.toml
+├── alacritty/{alacritty.toml,colors-day.toml,colors-night.toml}
 ├── git/{config.tmpl,ignore}
+├── plasma/                  KDE colour schemes + look-and-feel packages
 ├── ripgrep/ripgreprc
 ├── starship/starship.toml
+├── theme-sync/{theme-sync,theme-sync.service}
 ├── tmux/tmux.conf
 ├── vscode/keybindings.json
 ├── zed/{settings.json,themes/cell-tower.json}
 └── zsh/{zshrc,zprofile}
 ```
+
+`plasma/` and `theme-sync/` are the two exceptions to the naming convention —
+they target `~/.local/share` and `~/.local/bin` respectively, because KDE and
+systemd look nowhere else.
 
 ### How the layers stack
 
@@ -108,7 +114,7 @@ and `--dry-run` shows the diff first.
 | Login shell | `[bootstrap.user]` | `/bin/zsh` |
 | Tools | `[tools]` | node, python, and ~18 CLI tools |
 | Task | `[tasks.bootstrap]` | tmux plugin install |
-| Final hook | `[bootstrap.hooks.final]` | Nerd Font, docker daemon + group (Linux) |
+| Final hook | `[bootstrap.hooks.final]` | Nerd Font, docker daemon + group, day/night theming (Linux) |
 
 ## Tools
 
@@ -191,37 +197,99 @@ Two caveats worth knowing:
 
 ## Theme
 
-**Cell Tower** — a light scheme built from the KDE colour scheme of the same
-name on the Nobara desktop, so the editor, the window decorations, and the
-terminal all agree. Cream paper (`#f5e7b8`), slate ink (`#3d5a6c`), rust accent
-(`#c1512e`) for cursor, focus rings, and the active line number.
+**Cell Tower** — one palette in two halves, applied across the desktop, the
+terminal, and the editor, switching itself at sunset.
+
+| | Day | Night |
+|---|---|---|
+| Ground | `#f5e7b8` cream paper | `#22323d` deep slate |
+| Ink | `#3d5a6c` slate | `#f0e3bc` cream |
+| Accent | `#c1512e` rust | `#d66640` rust |
+
+Night is the same three colours inverted rather than a different theme wearing
+the same name, which is what makes the transition read as the room getting
+dark instead of the desktop changing its mind.
+
+### Where each piece lives
+
+| Surface | Day | Night | Source |
+|---------|-----|-------|--------|
+| KDE | `Cell Tower` | `Cell Tower Night` | `plasma/color-schemes/` |
+| Global theme | `Cell Tower Day` | `Cell Tower Night` | `plasma/look-and-feel/` |
+| Zed | `Cell Tower` | `Cell Tower Night` | `zed/themes/cell-tower.json` |
+| alacritty | `colors-day.toml` | `colors-night.toml` | `alacritty/` |
 
 `zed/themes/cell-tower.json` is a plain theme file, not an extension: Zed reads
 every JSON file under `~/.config/zed/themes` and hot-reloads on save, so editing
-the repo restyles the running editor. Pick it under *Settings → Theme*, or leave
-`"theme".light` in `zed/settings.json` alone — it already selects it.
+the repo restyles the running editor.
 
 The syntax colours deliberately do **not** reuse the desktop palette. Those
-values were mixed for UI chrome against a cream background and land around
-2–4:1 there, which reads as washed out in a code buffer. The syntax set is a
-deepened, higher-chroma variant of the same hues, every entry between roughly
-5:1 and 7:1 against the editor background:
+values were mixed for UI chrome and land around 2–4:1 against their own
+background, which reads as washed out in a code buffer. Both syntax sets are
+deepened (day) or brightened (night) variants of the same hues, every entry
+between roughly 5:1 and 7:1 against the editor background:
 
-| Role | Colour | Notes |
-|------|--------|-------|
-| Keywords, tags, headings | `#a8341a` rust | bold |
-| Functions | `#1a5a80` blue | bold at the definition site |
-| Types, constructors | `#7a2f6e` plum | bold |
-| Strings | `#3d6b2c` green | escapes in `#a34a15` bold |
-| Numbers | `#8f5200` amber | booleans `#8a3a8f` bold |
-| Properties, hints, regex | `#0f6469` teal | |
-| Constants, variants, labels | `#9c2f5c` carmine | |
-| Attributes | `#3f4d9c` indigo | |
-| Variables | `#2a404e` ink | the default weight the rest plays against |
-| Comments | `#6d8290` slate | italic, ~3:1 — quiet on purpose |
+| Role | Day | Night | Notes |
+|------|-----|-------|-------|
+| Keywords, tags, headings | `#a8341a` rust | `#f08a5f` rust | bold |
+| Functions | `#1a5a80` blue | `#6fb8e0` sky | bold at the definition site |
+| Types, constructors | `#7a2f6e` plum | `#d493d8` orchid | bold |
+| Strings | `#3d6b2c` green | `#a4c76a` sage | escapes brighter, bold |
+| Numbers | `#8f5200` amber | `#e0a33f` amber | booleans in violet, bold |
+| Properties, hints, regex | `#0f6469` teal | `#5fc9c4` teal | |
+| Constants, variants, labels | `#9c2f5c` carmine | `#ef7a9e` carmine | |
+| Attributes | `#3f4d9c` indigo | `#9aa8f0` indigo | |
+| Variables | `#2a404e` ink | `#f0e3bc` cream | the weight the rest plays against |
+| Comments | `#6d8290` slate | `#7d919e` slate | italic, ~3–4:1 — quiet on purpose |
 
 Comments are the one intentional exception to the contrast floor; everything
-else clears WCAG AA for body text.
+else clears WCAG AA for body text in both halves.
+
+## Day/night switching
+
+The schedule is **KWin's**, not ours. Night Light already computes sunrise and
+sunset for your location and ramps colour temperature across the transition
+(~29 minutes on the default schedule). Plasma 6.4+ can hang the theme switch on
+that same clock, so there is one source of truth and nothing to drift:
+
+```
+KWin NightLight schedule
+   └─ Plasma  AutomaticLookAndFeel  → swaps the look-and-feel package
+        └─ XDG portal org.freedesktop.appearance/color-scheme
+             ├─ Zed        follows it directly ("mode": "system")
+             └─ theme-sync follows it, and rewrites alacritty's colours
+```
+
+`theme-sync` exists only because alacritty has no concept of a system
+appearance. It watches the portal rather than KWin directly, so a manual theme
+change from System Settings propagates to open terminals exactly like a
+scheduled one. Zed needs no help at all.
+
+Set up by `[bootstrap.hooks.final]` in `mise.linux.toml`, which writes the
+three `kdeglobals` keys (`DefaultLightLookAndFeel`, `DefaultDarkLookAndFeel`,
+`AutomaticLookAndFeel`) and enables the user unit. To drive it by hand:
+
+```sh
+theme-sync day     # or: night, or bare `theme-sync` to re-read the portal
+```
+
+Useful to know:
+
+- **`AutomaticLookAndFeelOnIdle` is left at its default (`true`)** — Plasma
+  waits a few seconds of idle before flipping, so the desktop never restyles
+  itself mid-keystroke.
+- **`~/.config/alacritty/colors.toml` is generated**, not symlinked. It is the
+  only file here that is written rather than linked, which is why it is absent
+  from `[dotfiles]`.
+- **alacritty's import precedence is backwards from the obvious guess** —
+  imports load first and the *importing* file loads last, so `alacritty.toml`
+  deliberately contains no `[colors]` block. Putting one back would silently
+  pin the terminal to one palette forever.
+- **There is no fade.** Nothing on Wayland can crossfade unrelated app windows
+  between two colour schemes; each surface repaints in one frame. What is
+  gradual is Night Light's temperature ramp, which is already well underway by
+  the time the theme flips — so in practice the screen slides warm for half an
+  hour and then takes one clean step.
 
 ## Font
 
@@ -284,6 +352,19 @@ mise bootstrap dotfiles add ~/.config/git/config
 - **`docker ps` says permission denied** — the group add in
   `[bootstrap.hooks.final]` needs a fresh login. `newgrp docker` fixes the
   current shell.
+- **"Cell Tower" appears twice in the colour scheme list** — a hand-installed
+  copy is sitting beside the managed one. KDE keys schemes off the `[General]
+  ColorScheme=` value, not the filename, so two files claiming `CellTower` both
+  show up. Delete the unmanaged one: `rm ~/.local/share/color-schemes/'Cell
+  Tower.colors'` (note the space — the managed file has none, matching the
+  convention every Breeze scheme follows).
+- **The terminal did not change but everything else did** — `systemctl --user
+  status theme-sync`. If it is inactive, the unit is `WantedBy
+  graphical-session.target` and only starts inside a desktop session.
+- **Nothing changes at sunset** — check the schedule KWin is actually using:
+  `qdbus org.kde.KWin /org/kde/KWin/NightLight` shows `daylight` and the next
+  `scheduledTransitionDateTime`. Night Light must be enabled for
+  `AutomaticLookAndFeel` to have a clock to hang on.
 
 ## Tmux plugins
 

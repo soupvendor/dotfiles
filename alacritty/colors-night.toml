@@ -1,0 +1,38 @@
+# Cell Tower — night. The same three colors inverted: slate ground, cream ink,
+# rust accent held back for the cursor and the selection.
+#
+# Do not import this directly. theme-sync/theme-sync.sh copies it over
+# ~/.config/alacritty/colors.toml, which alacritty.toml imports and which
+# alacritty's file watcher reloads live. See theme-sync/ for the mechanism.
+
+[colors.primary]
+background = "#22323d"
+foreground = "#f0e3bc"
+
+[colors.cursor]
+text   = "#22323d"
+cursor = "#ee7f52"
+
+[colors.selection]
+text       = "#22323d"
+background = "#d66640"
+
+[colors.normal]
+black   = "#354a59"
+red     = "#d66640"
+green   = "#9dbf68"
+yellow  = "#d4a24a"
+blue    = "#5e94b2"
+magenta = "#a86e92"
+cyan    = "#4e949e"
+white   = "#c9bd9a"
+
+[colors.bright]
+black   = "#5d7382"
+red     = "#f08a5f"
+green   = "#b4d47f"
+yellow  = "#eab958"
+blue    = "#6fb8e0"
+magenta = "#d493d8"
+cyan    = "#5fc9c4"
+white   = "#f0e3bc"

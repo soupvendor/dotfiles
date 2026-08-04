@@ -1,0 +1,17 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "nickseldner@gmail.com",
+                "Name": "Nick Seldner"
+            }
+        ],
+        "Category": "",
+        "Description": "Cream paper, slate ink, rust accent — the daytime half of Cell Tower",
+        "Id": "com.nickseldner.celltower.day",
+        "License": "MIT",
+        "Name": "Cell Tower Day",
+        "Version": "1.0"
+    }
+}

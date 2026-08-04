@@ -1,3 +1,20 @@
+# -----------------------------------------------------------------------------
+# Colors are NOT in this file. They live in colors-day.toml / colors-night.toml,
+# and theme-sync copies whichever is current over ~/.config/alacritty/colors.toml.
+#
+# This split is forced by alacritty's own precedence rule, which is the opposite
+# of what you'd guess: imports load first and the IMPORTING file loads last, so
+# any [colors] block written here would silently beat the imported one and the
+# terminal would never change. Keeping this file colorless is what makes the
+# import authoritative.
+#
+# colors.toml is generated, so it is not a [dotfiles] symlink — theme-sync
+# writes it in place, and alacritty's watcher picks up the write and repaints
+# every open window. live_config_reload defaults to true; do not turn it off.
+# -----------------------------------------------------------------------------
+[general]
+import = ["~/.config/alacritty/colors.toml"]
+
 [env]
 TERM = "xterm-256color"
 
@@ -19,35 +36,6 @@ size = 14.0
 [cursor]
 style = { shape = "Block", blinking = "On" }
 blink_interval = 500
-
-# Tokyo Night theme
-[colors.primary]
-background = "#1a1b26"
-foreground = "#c0caf5"
-
-[colors.cursor]
-text   = "#1a1b26"
-cursor = "#c0caf5"
-
-[colors.normal]
-black   = "#15161e"
-red     = "#f7768e"
-green   = "#9ece6a"
-yellow  = "#e0af68"
-blue    = "#7aa2f7"
-magenta = "#bb9af7"
-cyan    = "#7dcfff"
-white   = "#a9b1d6"
-
-[colors.bright]
-black   = "#414868"
-red     = "#f7768e"
-green   = "#9ece6a"
-yellow  = "#e0af68"
-blue    = "#7aa2f7"
-magenta = "#bb9af7"
-cyan    = "#7dcfff"
-white   = "#c0caf5"
 
 [keyboard]
 bindings = [

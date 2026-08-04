@@ -1,0 +1,102 @@
+#!/bin/sh
+# =============================================================================
+# theme-sync — follow the desktop's light/dark preference in apps that can't.
+#
+#   theme-sync            apply whatever the desktop currently prefers
+#   theme-sync day        force the light palette
+#   theme-sync night      force the dark palette
+#   theme-sync watch      apply, then keep following (the systemd unit's mode)
+#
+# WHY THE PORTAL AND NOT KWIN. KWin's NightLight object also exposes a
+# `daylight` boolean, and it is the thing that actually schedules the flip — but
+# reading it would miss every manual switch, and it is KDE-only. The XDG portal
+# setting org.freedesktop.appearance/color-scheme is downstream of BOTH the
+# schedule and the manual toggle, and it is the same signal Zed subscribes to.
+# One source of truth, so the terminal can never disagree with the editor.
+#
+# WHAT THIS DOES NOT DO. Plasma switches itself (see the AutomaticLookAndFeel
+# key in mise.linux.toml) and Zed switches itself (see zed/settings.json,
+# "mode": "system"). Only alacritty needs an outside hand, because it has no
+# concept of a system appearance. Anything else that needs one goes in apply().
+# =============================================================================
+set -eu
+
+alacritty_dir="${XDG_CONFIG_HOME:-$HOME/.config}/alacritty"
+
+log() { printf 'theme-sync: %s\n' "$*"; }
+
+# 0 = no preference, 1 = prefer dark, 2 = prefer light.
+#
+# The value is parsed rather than stripped of non-digits: gdbus prints
+# `(<uint32 1>,)`, and a naive tr -dc '0-9' would happily return "321".
+portal_scheme() {
+    gdbus call --session \
+        --dest org.freedesktop.portal.Desktop \
+        --object-path /org/freedesktop/portal/desktop \
+        --method org.freedesktop.portal.Settings.ReadOne \
+        org.freedesktop.appearance color-scheme 2>/dev/null |
+        sed -n 's/.*uint32 \([0-9]*\).*/\1/p'
+}
+
+# Anything that is not an explicit "prefer dark" means day, including a portal
+# that is absent or unreachable — so a bootstrap on a headless or pre-session
+# machine still lands on a valid palette instead of failing.
+current_variant() {
+    case "$(portal_scheme)" in
+    1) echo night ;;
+    *) echo day ;;
+    esac
+}
+
+apply() {
+    variant="$1"
+    src="$alacritty_dir/colors-$variant.toml"
+    dst="$alacritty_dir/colors.toml"
+
+    if [ ! -r "$src" ]; then
+        log "no $src — is the dotfiles run finished?"
+        return 1
+    fi
+
+    # Copied in place, NOT renamed over. alacritty's config watcher holds the
+    # inode; a mktemp + mv would swap the file out from under it and the
+    # terminal would keep the old colors until restart. A truncate-and-write
+    # keeps the inode, so every open window repaints.
+    cat "$src" >"$dst"
+    log "applied $variant"
+}
+
+watch() {
+    apply "$(current_variant)" || true
+
+    # stdbuf because gdbus block-buffers when its stdout is a pipe, which would
+    # sit on the transition for a whole buffer's worth of traffic — on an idle
+    # session, potentially forever.
+    buffered=""
+    command -v stdbuf >/dev/null 2>&1 && buffered="stdbuf -oL"
+
+    # shellcheck disable=SC2086
+    $buffered gdbus monitor --session \
+        --dest org.freedesktop.portal.Desktop \
+        --object-path /org/freedesktop/portal/desktop |
+        while IFS= read -r line; do
+            case "$line" in
+            *org.freedesktop.appearance*color-scheme*)
+                # Re-read rather than parse the signal payload: the same
+                # SettingChanged shape carries other keys, and a fresh read is
+                # authoritative if several arrive at once.
+                apply "$(current_variant)" || true
+                ;;
+            esac
+        done
+}
+
+case "${1:-apply}" in
+apply) apply "$(current_variant)" ;;
+day | night) apply "$1" ;;
+watch) watch ;;
+*)
+    printf 'usage: theme-sync [apply|day|night|watch]\n' >&2
+    exit 64
+    ;;
+esac
