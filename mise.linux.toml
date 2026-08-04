@@ -29,6 +29,17 @@ run = '''
 if command -v dnf >/dev/null && [ ! -f /etc/yum.repos.d/docker-ce.repo ]; then
   sudo dnf -y config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
 fi
+
+# Terra (Fyra Labs) — where zed comes from. Nobara ships this repo already, so
+# on the target distro the guard makes this a no-op; the branch exists so a
+# stock Fedora host can still resolve `dnf:zed` below. --nogpgcheck applies only
+# to terra-release itself, which carries the key every later package is
+# verified against.
+if command -v dnf >/dev/null && [ ! -f /etc/yum.repos.d/terra.repo ]; then
+  sudo dnf -y install --nogpgcheck \
+    --repofrompath "terra,https://repos.fyralabs.com/terra$(rpm -E %fedora)" \
+    terra-release
+fi
 '''
 
 # -----------------------------------------------------------------------------
@@ -53,6 +64,12 @@ fi
 # Not in the mise registry
 "dnf:git" = "latest"
 "dnf:zsh" = "latest" # also the login shell
+
+# Editor. From Terra, added by the pre-packages hook above — Zed is not in the
+# Fedora repos proper. Terra splits the CLI out of the GUI package, and it is
+# the CLI that provides `zed` on PATH; the macOS cask bundles both.
+"dnf:zed"     = "latest"
+"dnf:zed-cli" = "latest"
 
 # Used by [bootstrap.hooks.final] below for the Nerd Font
 "dnf:unzip" = "latest"

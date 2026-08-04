@@ -61,6 +61,18 @@ dotfiles.default_mode = "symlink"
 # Keep machine-local settings in mise.local.toml instead.
 "~/.config/mise" = { source = "mise", mode = "symlink-each" }
 
+# Zed: settings.json IS tracked, unlike VSCode's below — Zed writes back to it
+# only when you change a setting from the UI, not on every extension install.
+#
+# The theme is a plain JSON file in ~/.config/zed/themes, no extension and no
+# registry involved: Zed loads every file in that directory at startup and
+# hot-reloads on save, so the symlink means editing the repo restyles the
+# running editor. Entry is per-file rather than symlink-each on ~/.config/zed
+# because Zed writes conversation state and extension metadata into that
+# directory, which would show up untracked in `git status`.
+"~/.config/zed/settings.json"          = "zed/settings.json"
+"~/.config/zed/themes/cell-tower.json" = "zed/themes/cell-tower.json"
+
 # VSCode: keybindings.json only. settings.json is deliberately NOT tracked —
 # extensions rewrite it on install, so it would churn on every machine.
 # TODO: macOS puts this under ~/Library/Application Support/Code/User/. Moving

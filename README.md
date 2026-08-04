@@ -54,6 +54,7 @@ dotfiles/
 ├── starship/starship.toml
 ├── tmux/tmux.conf
 ├── vscode/keybindings.json
+├── zed/{settings.json,themes/cell-tower.json}
 └── zsh/{zshrc,zprofile}
 ```
 
@@ -100,8 +101,8 @@ and `--dry-run` shows the diff first.
 
 | Step | Config section | Here |
 |------|----------------|------|
-| Pre-packages hook | `[bootstrap.hooks.pre-packages]` | add the docker-ce dnf repo |
-| System packages | `[bootstrap.packages]` | git, zsh, alacritty, gcc/make, unzip, docker, flatpaks |
+| Pre-packages hook | `[bootstrap.hooks.pre-packages]` | add the docker-ce and Terra dnf repos |
+| System packages | `[bootstrap.packages]` | git, zsh, alacritty, zed, gcc/make, unzip, docker, flatpaks |
 | Git repos | `[bootstrap.repos]` | TPM, zsh-syntax-highlighting, zsh-autosuggestions |
 | Dotfiles | `[dotfiles]` | the symlinks and the rendered git config |
 | Login shell | `[bootstrap.user]` | `/bin/zsh` |
@@ -117,6 +118,7 @@ and `--dry-run` shows the diff first.
 |------|--------|---------|
 | [mise](https://mise.jdx.dev) | `mise/config.toml`, `mise*.toml` | Tools, packages, dotfiles, bootstrap |
 | [alacritty](https://alacritty.org) | `alacritty/alacritty.toml` | GPU-accelerated terminal |
+| [zed](https://zed.dev) | `zed/settings.json`, `zed/themes/cell-tower.json` | Editor, plus the Cell Tower theme |
 | [tmux](https://github.com/tmux/tmux) | `tmux/tmux.conf` | Terminal multiplexer |
 | [zsh](https://zsh.org) | `zsh/zshrc`, `zsh/zprofile` | Shell |
 | [starship](https://starship.rs) | `starship/starship.toml` | Cross-shell prompt |
@@ -144,9 +146,9 @@ and `--dry-run` shows the diff first.
 
 ### Supplied by the system, not mise
 
-`git`, `zsh`, `alacritty`, the build toolchain, and docker aren't in the mise
-registry, so they come from `[bootstrap.packages]` — `dnf`/`flatpak` on Linux,
-`brew-cask` on macOS. The split by platform file is deliberate: the old
+`git`, `zsh`, `alacritty`, `zed`, the build toolchain, and docker aren't in the
+mise registry, so they come from `[bootstrap.packages]` — `dnf`/`flatpak` on
+Linux, `brew-cask` on macOS. The split by platform file is deliberate: the old
 single-table design leaned on "mise skips absent managers", which is how a stray
 `brew:` entry could provoke a full linuxbrew bootstrap on a host that already had
 the package from dnf. Now brew entries can only exist in `mise.macos.toml`.
@@ -186,6 +188,40 @@ Two caveats worth knowing:
   `config.lock`.)
 - `eza` is the one tool with no `macos-arm64` entry — its registry package
   publishes no macOS asset, so it re-resolves at install time on a Mac.
+
+## Theme
+
+**Cell Tower** — a light scheme built from the KDE colour scheme of the same
+name on the Nobara desktop, so the editor, the window decorations, and the
+terminal all agree. Cream paper (`#f5e7b8`), slate ink (`#3d5a6c`), rust accent
+(`#c1512e`) for cursor, focus rings, and the active line number.
+
+`zed/themes/cell-tower.json` is a plain theme file, not an extension: Zed reads
+every JSON file under `~/.config/zed/themes` and hot-reloads on save, so editing
+the repo restyles the running editor. Pick it under *Settings → Theme*, or leave
+`"theme".light` in `zed/settings.json` alone — it already selects it.
+
+The syntax colours deliberately do **not** reuse the desktop palette. Those
+values were mixed for UI chrome against a cream background and land around
+2–4:1 there, which reads as washed out in a code buffer. The syntax set is a
+deepened, higher-chroma variant of the same hues, every entry between roughly
+5:1 and 7:1 against the editor background:
+
+| Role | Colour | Notes |
+|------|--------|-------|
+| Keywords, tags, headings | `#a8341a` rust | bold |
+| Functions | `#1a5a80` blue | bold at the definition site |
+| Types, constructors | `#7a2f6e` plum | bold |
+| Strings | `#3d6b2c` green | escapes in `#a34a15` bold |
+| Numbers | `#8f5200` amber | booleans `#8a3a8f` bold |
+| Properties, hints, regex | `#0f6469` teal | |
+| Constants, variants, labels | `#9c2f5c` carmine | |
+| Attributes | `#3f4d9c` indigo | |
+| Variables | `#2a404e` ink | the default weight the rest plays against |
+| Comments | `#6d8290` slate | italic, ~3:1 — quiet on purpose |
+
+Comments are the one intentional exception to the contrast floor; everything
+else clears WCAG AA for body text.
 
 ## Font
 
