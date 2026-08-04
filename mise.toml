@@ -1,0 +1,141 @@
+# =============================================================================
+# mise.toml — the shared layer
+#
+# Everything that does not vary by platform: what gets symlinked where, which
+# repos to clone, the login shell, and the maintenance tasks.
+#
+# Platform variance lives in mise.linux.toml / mise.macos.toml, selected
+# automatically by `auto_env = true` in .miserc.toml. Layering, later winning:
+#
+#   mise/config.toml  ->  mise.toml  ->  mise.<platform>.toml  ->  mise.local.toml
+#   (tools, global)       (this file)    (packages, hooks)        (identity, gitignored)
+#
+#   ./install.sh               converge this machine from scratch
+#   ./install.sh --dry-run     preview what would change
+#   mise run check             show what has drifted
+#   mise run up                upgrade tools and refresh the lockfile
+#
+# These tasks read this config, so run them from the repo — or from anywhere
+# with `mise -C ~/.dotfiles run <task>`.
+# =============================================================================
+
+min_version = "2026.7.0"
+
+[settings]
+# Co-located with the [dotfiles] table it governs. There is deliberately no
+# `dotfiles.root`: every entry below carries an explicit `source`, which mise
+# resolves against THIS file's directory. That is what frees the repo to live
+# anywhere and removes the old requirement that ~/.dotfiles be a symlink.
+dotfiles.default_mode = "symlink"
+
+# -----------------------------------------------------------------------------
+# Dotfiles — replaces GNU Stow.
+#
+# Layout convention: one top-level directory per tool, named for its target
+# under ~/.config. Sources drop the leading dot; targets keep the real name.
+#
+# mise refuses to replace files it does not manage, so a first run on a machine
+# with pre-existing configs stops and names them rather than clobbering them.
+# Read that list, then re-run with `./install.sh --force-dotfiles`.
+# -----------------------------------------------------------------------------
+[dotfiles]
+"~/.config/alacritty/alacritty.toml" = "alacritty/alacritty.toml"
+"~/.config/ripgrep/ripgreprc"        = "ripgrep/ripgreprc"
+"~/.config/starship.toml"            = "starship/starship.toml"
+"~/.tmux.conf"                       = "tmux/tmux.conf"
+"~/.zprofile"                        = "zsh/zprofile"
+"~/.zshrc"                           = "zsh/zshrc"
+
+# Git identity is machine-local, so this one is rendered rather than symlinked.
+# The cost, and it is a real one: `git config --global ...` writes to the
+# rendered file and is overwritten on the next apply. To keep such a change,
+# capture it back with `mise bootstrap dotfiles add ~/.config/git/config`.
+"~/.config/git/config" = { source = "git/config.tmpl", mode = "template" }
+"~/.config/git/ignore" = "git/ignore"
+
+# symlink-each rather than a whole-directory symlink: mise writes state into
+# its own config dir, and this leaves ~/.config/mise a real directory so those
+# files stay local instead of showing up as untracked in `git status`.
+# Note this does NOT redirect `mise settings set` — that still writes to
+# ~/.config/mise/config.toml, which is a symlink into this repo either way.
+# Keep machine-local settings in mise.local.toml instead.
+"~/.config/mise" = { source = "mise", mode = "symlink-each" }
+
+# VSCode: keybindings.json only. settings.json is deliberately NOT tracked —
+# extensions rewrite it on install, so it would churn on every machine.
+# TODO: macOS puts this under ~/Library/Application Support/Code/User/. Moving
+# that variant into mise.macos.toml needs [dotfiles] to merge additively across
+# configs, which mise does not document — verify before splitting this table.
+"~/.config/Code/User/keybindings.json" = "vscode/keybindings.json"
+
+# -----------------------------------------------------------------------------
+# Git repos — replaces the TPM clone in the old install.sh
+# -----------------------------------------------------------------------------
+[bootstrap.repos]
+"~/.tmux/plugins/tpm" = { url = "https://github.com/tmux-plugins/tpm", ref = "master" }
+
+# zsh plugins. Cloned rather than packaged: Fedora puts these under
+# /usr/share/... and Homebrew under $(brew --prefix)/share/..., so packaging
+# them would mean a path-search loop in .zshrc. A clone is one path everywhere.
+# Pinned to release tags — unlike TPM these are sourced into every shell.
+"~/.zsh/zsh-syntax-highlighting" = { url = "https://github.com/zsh-users/zsh-syntax-highlighting", ref = "0.8.0" }
+"~/.zsh/zsh-autosuggestions"     = { url = "https://github.com/zsh-users/zsh-autosuggestions", ref = "v0.7.1" }
+
+# -----------------------------------------------------------------------------
+# Login shell — replaces the chsh block in the old install.sh. mise appends the
+# path to /etc/shells if missing, then chsh's.
+#
+# Shared rather than per-platform: /bin/zsh exists on macOS and on every
+# usr-merged Linux, so one literal covers both. (A fish or nushell setup would
+# have to push this down into the platform files, since those paths differ.)
+# -----------------------------------------------------------------------------
+[bootstrap.user]
+login_shell = "/bin/zsh"
+
+# -----------------------------------------------------------------------------
+# [bootstrap.mise_shell_activate] is deliberately NOT set.
+#
+# It would edit ~/.zshrc in place — but ~/.zshrc is already owned by [dotfiles]
+# above. Either mise follows the symlink and dirties this repo on every machine,
+# or it writes atomically and replaces the symlink with a real file, which the
+# next bootstrap's dotfiles step would then refuse to relink. One file, one
+# owner: the activation eval stays hand-written in zsh/zshrc.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Imperative leftovers, platform-neutral. Runs on EVERY bootstrap (step 10) —
+# keep it idempotent.
+#
+# Platform-specific imperative work does NOT go here. [tasks] are replaced
+# per-name across configs, so a platform file redefining `bootstrap` would
+# silently drop this step. The platform layers use [bootstrap.hooks] instead.
+# -----------------------------------------------------------------------------
+[tasks.bootstrap]
+description = "Install tmux plugins"
+run = '''
+set -euo pipefail
+
+# TPM itself is cloned by [bootstrap.repos] above
+if [ -x "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
+  "$HOME/.tmux/plugins/tpm/bin/install_plugins" >/dev/null
+fi
+'''
+
+# -----------------------------------------------------------------------------
+# Maintenance
+# -----------------------------------------------------------------------------
+[tasks.up]
+description = "Upgrade tools, refresh the lockfile, upgrade system packages"
+run         = ["mise upgrade", "mise lock", "mise bootstrap packages upgrade"]
+
+[tasks.check]
+description = "Show everything that has drifted from this config"
+run         = "mise bootstrap status"
+
+[tasks.fmt]
+description = "Format the TOML in this repo"
+run         = "taplo fmt"
+
+[tasks.lint]
+description = "Lint the TOML in this repo"
+run         = "taplo lint"

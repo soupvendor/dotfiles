@@ -1,0 +1,23 @@
+# `mise run fmt` / `mise run lint`
+#
+# Scoped to the mise configs only. App configs that happen to be TOML
+# (alacritty, starship) follow their own upstream conventions and are not this
+# formatter's business — unscoped, taplo collapses Alacritty's keybinding array
+# onto one line and realigns things nobody asked it to touch.
+include = ["mise.toml", "mise.*.toml", "mise/*.toml"]
+
+# Column-align values, but do NOT reorder keys globally: the [tools]
+# table in mise/config.toml is grouped by purpose under comment headers
+# ("Modern CLI replacements", "Git", ...) and alphabetizing it would scatter
+# those comments away from the entries they describe.
+[formatting]
+align_entries = true
+reorder_keys  = false
+
+# The package tables are flat lists with no meaningful order, so let taplo keep
+# them alphabetical mechanically rather than by hand.
+[[rule]]
+include = ["mise.linux.toml", "mise.macos.toml"]
+
+[rule.formatting]
+reorder_keys = true

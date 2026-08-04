@@ -1,0 +1,24 @@
+# =============================================================================
+# mise.macos.toml — the macOS platform layer
+#
+# Selected automatically by `auto_env = true` in .miserc.toml. Untested on real
+# hardware; kept honest by being the only place brew entries may appear.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# System packages — ONLY what mise cannot supply from [tools] in mise/config.toml.
+#
+# Deliberately no "brew:git" and no "brew:zsh": macOS gets git from the Xcode
+# Command Line Tools, which Homebrew requires anyway, and ships /bin/zsh. Adding
+# either is also what used to provoke a full linuxbrew bootstrap when this table
+# was shared with Linux — mise treats brew as installable there too.
+# -----------------------------------------------------------------------------
+[bootstrap.packages]
+"brew-cask:alacritty" = "latest"
+"brew-cask:docker"    = "latest" # Docker Desktop
+"brew-cask:spotify"   = "latest"
+
+# Nerd Font. Linux builds this from the release zip in mise.linux.toml because
+# no distro ships a patched variant. (homebrew/cask-fonts folded into
+# homebrew/cask in 2024, so the old tap is gone.)
+"brew-cask:font-jetbrains-mono-nerd-font" = "latest"
