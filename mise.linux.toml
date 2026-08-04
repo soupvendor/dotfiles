@@ -1,0 +1,126 @@
+# =============================================================================
+# mise.linux.toml — the Linux platform layer, scoped to Fedora
+#
+# Selected automatically: `auto_env = true` in .miserc.toml makes mise append
+# platform names to MISE_ENV, and mise.<env>.toml resolution picks this up.
+#
+# NAMING TENSION, on purpose: auto_env derives only `unix`, `linux`/`macos`/
+# `windows`, and `linux-x64`-style names — never distro names. A
+# mise.fedora.toml would simply never be selected. So the Fedora-specific
+# content lives here, in the file mise will actually load. If a second Linux
+# distro ever shows up, split it out as mise.fedora.toml and select it
+# explicitly with `MISE_ENV=fedora` / `mise bootstrap -E fedora`.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Third-party package repos, added before the packages step needs them.
+#
+# GOTCHA: this hook runs only as part of the full bootstrap orchestration.
+#   mise bootstrap                 runs it
+#   mise bootstrap --only packages runs it
+#   mise bootstrap packages apply  DOES NOT — the subcommand applies just the
+#                                  table, so docker-ce fails with "no match"
+# There is no `hooks` value for --only/--skip; hooks are bound to their phase.
+# Use the full `mise bootstrap` (or --only packages) whenever a package depends
+# on a repo added here.
+# -----------------------------------------------------------------------------
+[bootstrap.hooks.pre-packages]
+run = '''
+if command -v dnf >/dev/null && [ ! -f /etc/yum.repos.d/docker-ce.repo ]; then
+  sudo dnf -y config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
+fi
+'''
+
+# -----------------------------------------------------------------------------
+# System packages — ONLY what mise cannot supply from [tools] in mise/config.toml.
+#
+# dnf and flatpak only. The old single-table design carried apt/pacman/apk
+# entries too and leaned on "mise skips absent managers" to sort it out, which
+# is how a stray brew: entry could provoke a full linuxbrew bootstrap on a host
+# that already had the package from dnf. Splitting by platform makes that
+# structurally impossible — brew entries can only exist in mise.macos.toml.
+# -----------------------------------------------------------------------------
+[bootstrap.packages]
+# Terminal emulator. Native package — Alacritty is not on Flathub, so the
+# Flatpak path the old install.sh took never actually worked.
+"dnf:alacritty" = "latest"
+
+# Build toolchain — needed when mise has to compile rather than download a
+# prebuilt (source Python builds, cargo backend fallbacks). No-op when present.
+"dnf:gcc"  = "latest"
+"dnf:make" = "latest"
+
+# Not in the mise registry
+"dnf:git" = "latest"
+"dnf:zsh" = "latest" # also the login shell
+
+# Used by [bootstrap.hooks.final] below for the Nerd Font
+"dnf:unzip" = "latest"
+
+# Docker. The daemon needs enabling and the socket needs a group — neither of
+# which a package install does; see [bootstrap.hooks.final].
+"dnf:containerd.io"         = "latest"
+"dnf:docker-ce"             = "latest"
+"dnf:docker-ce-cli"         = "latest"
+"dnf:docker-compose-plugin" = "latest"
+
+# Container GUI. Podman Desktop talks to the Docker socket as well as podman, so
+# it manages the docker-ce daemon above — and unlike Docker Desktop for Linux it
+# is packaged (Flathub), so it needs no download hook and creates no rival
+# `desktop-linux` CLI context to confuse `docker ps`.
+"flatpak:io.podman_desktop.PodmanDesktop" = "latest"
+
+"flatpak:com.spotify.Client" = "latest"
+
+# -----------------------------------------------------------------------------
+# Imperative leftovers that are Linux-only. Runs last (bootstrap step 11), on
+# EVERY bootstrap — keep it idempotent.
+#
+# These used to live in [tasks.bootstrap] behind a `[ "$(uname -s)" = "Linux" ]`
+# wrapper. Selecting this file IS that test, so the wrapper is gone. A hook
+# rather than a task because [tasks] are replaced per-name across configs and
+# would clobber the shared tmux step in mise.toml.
+# -----------------------------------------------------------------------------
+[bootstrap.hooks.final]
+run = '''
+set -euo pipefail
+
+# --- JetBrainsMono Nerd Font (macOS gets the cask in mise.macos.toml) ---
+# No distro ships a patched Nerd variant, so it comes from the release zip.
+# Guarded by a version stamp rather than mere directory existence, so bumping
+# nf_version actually reinstalls and the no-op case is a single `cat`.
+nf_version="v3.4.0"
+font_dir="${XDG_DATA_HOME:-$HOME/.local/share}/fonts/JetBrainsMonoNerdFont"
+stamp="$font_dir/.mise-nerd-font-version"
+if [ "$(cat "$stamp" 2>/dev/null || true)" != "$nf_version" ]; then
+  tmp="$(mktemp -d)"
+  trap 'rm -rf "$tmp"' EXIT
+  curl -fsSL -o "$tmp/font.zip" \
+    "https://github.com/ryanoasis/nerd-fonts/releases/download/${nf_version}/JetBrainsMono.zip"
+  rm -rf "$font_dir"
+  mkdir -p "$font_dir"
+  unzip -qo "$tmp/font.zip" -d "$font_dir"
+  printf '%s\n' "$nf_version" > "$stamp"
+  fc-cache -f "$font_dir" >/dev/null
+  echo "installed JetBrainsMono Nerd Font ${nf_version}"
+fi
+
+# --- Docker: the part [bootstrap.packages] can't do ---
+# Installing docker-ce leaves the daemon disabled and the socket root-owned, so
+# `docker ps` fails until both of these run. Neither fits a declarative section:
+# docker.service is a SYSTEM unit, so [bootstrap.linux.systemd.units] (which
+# manages user units) can't enable it.
+#
+# Both lines are guarded because this hook runs on every bootstrap.
+#
+# NOTE: the docker group is root-equivalent — a member can bind-mount / into a
+# container as root. Accepted here for a single-user workstation. Podman is
+# installed and rootless if you'd rather not grant it; drop the usermod line and
+# the daemon still works under sudo.
+#
+# Group membership needs a fresh login (or `newgrp docker`) to take effect.
+if command -v dockerd >/dev/null; then
+  systemctl is-enabled docker >/dev/null 2>&1 || sudo systemctl enable --now docker
+  id -nG "$USER" | tr ' ' '\n' | grep -qx docker || sudo usermod -aG docker "$USER"
+fi
+'''

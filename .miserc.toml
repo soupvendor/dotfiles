@@ -1,0 +1,7 @@
+# mise settings for this repo (analogous to .npmrc — settings, not tools).
+#
+# This one line is the entire platform-selection mechanism: it makes mise append
+# platform names to MISE_ENV, so mise.linux.toml / mise.macos.toml are picked up
+# by the normal mise.<env>.toml resolution. Without it, only mise.toml loads and
+# no system packages are declared at all.
+auto_env = true

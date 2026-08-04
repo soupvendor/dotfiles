@@ -1,0 +1,78 @@
+# =============================================================================
+# mise/config.toml — the tools layer
+#
+# This file has two lifetimes:
+#
+#   1. As a PROJECT config, mise discovers it at <repo>/mise/config.toml, so
+#      [tools] install on the very first bootstrap — before any symlink exists.
+#   2. As the GLOBAL config, the [dotfiles] entry in ../mise.toml symlinks this
+#      directory to ~/.config/mise, so afterwards these tools are on PATH
+#      everywhere and mise.lock lives beside them, inside the repo.
+#
+# What does NOT belong here: [dotfiles]. Relative sources resolve against the
+# directory of the config file that declares them, so an entry written here
+# would resolve against ~/.config/mise once symlinked, not against the repo.
+# The dotfiles map lives in ../mise.toml.
+# =============================================================================
+
+min_version = "2026.7.0"
+
+# -----------------------------------------------------------------------------
+# Settings
+# -----------------------------------------------------------------------------
+[settings]
+# Record exact versions, URLs, and checksums in a lockfile beside this config.
+# "latest" then means "whatever `mise run up` last resolved" — identical on
+# every machine — instead of "whatever exists on install day".
+lockfile = true
+# Resolve for both machines from either one, so locking on Linux still emits
+# usable macOS entries.
+lockfile_platforms = ["linux-x64", "macos-arm64"]
+
+# -----------------------------------------------------------------------------
+# Tools — everything mise can supply. Exact versions live in the lockfile.
+# -----------------------------------------------------------------------------
+[tools]
+# Runtimes are pinned to a major line on purpose. Floating "lts"/"latest"
+# re-resolves at every major cutover without you noticing; bump these by hand.
+node   = "24"
+python = "3.14"
+
+# Shell & terminal
+starship = "latest"
+tmux     = "latest"
+
+# Modern CLI replacements
+#
+# eza is the only tool with no macos-arm64 entry in the lockfile — its aqua
+# package publishes no macOS asset — so it re-resolves at install time on a Mac.
+eza     = "latest" # ls
+bat     = "latest" # cat
+fd      = "latest" # find
+ripgrep = "latest" # grep
+sd      = "latest" # sed
+zoxide  = "latest" # cd
+
+# Fuzzy finder & navigation
+fzf  = "latest"
+yazi = "latest"
+
+# Git
+delta   = "latest" # registry name is `delta`, not `git-delta`
+lazygit = "latest"
+gh      = "latest"
+
+# Containers — TUI dashboard for the docker-ce daemon installed by the
+# platform layer (see ../mise.linux.toml)
+lazydocker = "latest"
+
+# History & per-directory env
+atuin  = "latest"
+direnv = "latest"
+
+# Misc
+jq   = "latest"
+just = "latest" # for other people's Justfiles; this repo uses [tasks]
+
+# TOML formatter/linter for this repo — see ../.taplo.toml and `mise run fmt`
+taplo = "latest"

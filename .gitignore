@@ -1,6 +1,11 @@
 .DS_Store
 *.local
 
-# `mise settings set` writes here, and ~/.config/mise is a symlink into this
-# repo — so machine-local settings would otherwise show up as commits.
-.config/mise/settings.toml
+# Machine-local mise config — git identity vars, and anywhere else you want a
+# setting to stay on one machine. install.sh generates mise.local.toml.
+.mise.*.local.toml
+.mise.local.toml
+.mise/*.local.toml
+mise.*.local.toml
+mise.local.toml
+mise/*.local.toml
