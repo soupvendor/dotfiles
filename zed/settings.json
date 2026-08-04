@@ -1,0 +1,44 @@
+// Zed settings.
+//
+// Docs: https://zed.dev/docs/configuring-zed
+// `zed: open default settings` in the command palette shows everything
+// unset here.
+//
+// Unlike vscode/, settings.json IS tracked for Zed: nothing rewrites it
+// behind your back, so it does not churn from machine to machine.
+//
+// The "Cell Tower" theme referenced below is not from the extension
+// registry — it is zed/themes/cell-tower.json in this repo, symlinked to
+// ~/.config/zed/themes/. Zed loads every JSON file in that directory and
+// hot-reloads on save.
+{
+  "telemetry": {
+    "diagnostics": true,
+    "metrics": false,
+    "anthropic_retention": false
+  },
+  "minimap": {
+    "show": "always"
+  },
+  "agent_servers": {
+    "claude-acp": {
+      "type": "registry"
+    }
+  },
+  "icon_theme": {
+    "mode": "light",
+    "light": "Zed (Default)",
+    "dark": "Zed (Default)"
+  },
+  "base_keymap": "VSCode",
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  // Installed by the bootstrap — a cask on macOS, the release zip in
+  // mise.linux.toml's final hook. Same face alacritty and tmux use.
+  "buffer_font_family": "JetBrainsMono Nerd Font",
+  "theme": {
+    "mode": "light",
+    "light": "Cell Tower",
+    "dark": "Gruvbox Dark"
+  }
+}

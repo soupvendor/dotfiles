@@ -17,6 +17,7 @@
 "brew-cask:alacritty" = "latest"
 "brew-cask:docker"    = "latest" # Docker Desktop
 "brew-cask:spotify"   = "latest"
+"brew-cask:zed"       = "latest" # the cask bundles the `zed` CLI; Linux splits it out
 
 # Nerd Font. Linux builds this from the release zip in mise.linux.toml because
 # no distro ships a patched variant. (homebrew/cask-fonts folded into
