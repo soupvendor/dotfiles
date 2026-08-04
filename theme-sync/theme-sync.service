@@ -1,0 +1,19 @@
+[Unit]
+Description=Follow the desktop light/dark preference in apps that cannot
+Documentation=https://github.com/soupvendor/dotfiles
+# Bound to the graphical session rather than default.target: the unit talks to
+# the XDG portal on the session bus, which does not exist before the session is
+# up, and should stop when it goes away.
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/theme-sync watch
+# gdbus monitor exits if the portal or the bus restarts. Come back rather than
+# silently stop following.
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=graphical-session.target

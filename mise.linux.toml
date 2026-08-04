@@ -140,4 +140,45 @@ if command -v dockerd >/dev/null; then
   systemctl is-enabled docker >/dev/null 2>&1 || sudo systemctl enable --now docker
   id -nG "$USER" | tr ' ' '\n' | grep -qx docker || sudo usermod -aG docker "$USER"
 fi
+
+# --- Day/night theming ---
+# Three pieces, and only the first is ours:
+#
+#   Plasma  switches itself once these keys are set. AutomaticLookAndFeel is
+#           driven by KWin's NightLight schedule, the same sunrise/sunset clock
+#           that ramps colour temperature — so the theme flip and the warm ramp
+#           are the same event, not two timers that can drift apart.
+#   Zed     follows the XDG portal on its own; see zed/settings.json.
+#   Alacritty has no notion of a system appearance, which is the entire reason
+#           theme-sync exists.
+#
+# AutomaticLookAndFeelOnIdle is left at its default (true): Plasma waits for a
+# few seconds of idle before flipping, so the desktop never restyles itself
+# mid-keystroke. Setting it false makes the switch land the instant the sun
+# does, which is worse than it sounds.
+#
+# Guarded on kwriteconfig6 so a headless or non-KDE host skips the whole block.
+if command -v kwriteconfig6 >/dev/null; then
+  kwriteconfig6 --file kdeglobals --group KDE \
+    --key DefaultLightLookAndFeel com.nickseldner.celltower.day
+  kwriteconfig6 --file kdeglobals --group KDE \
+    --key DefaultDarkLookAndFeel com.nickseldner.celltower.night
+  kwriteconfig6 --file kdeglobals --group KDE --key AutomaticLookAndFeel true
+fi
+
+# theme-sync. Enabled but not started here: it is WantedBy
+# graphical-session.target, and `--now` from a bootstrap that might be running
+# over SSH would start a unit whose session bus does not exist yet.
+if command -v systemctl >/dev/null && [ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/bus" ]; then
+  systemctl --user daemon-reload
+  systemctl --user is-enabled theme-sync.service >/dev/null 2>&1 ||
+    systemctl --user enable theme-sync.service
+fi
+
+# Seed ~/.config/alacritty/colors.toml so the first terminal after a fresh
+# clone opens themed rather than on alacritty's built-in defaults. Falls back
+# to the day palette when there is no portal to ask.
+if [ -x "$HOME/.local/bin/theme-sync" ]; then
+  "$HOME/.local/bin/theme-sync" apply || true
+fi
 '''

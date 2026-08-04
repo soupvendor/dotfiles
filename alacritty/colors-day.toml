@@ -1,0 +1,40 @@
+# Cell Tower — day. Cream paper, slate ink, rust accent.
+#
+# Do not import this directly. theme-sync/theme-sync.sh copies it over
+# ~/.config/alacritty/colors.toml, which alacritty.toml imports and which
+# alacritty's file watcher reloads live. See theme-sync/ for the mechanism.
+
+[colors.primary]
+background = "#f5e7b8"
+foreground = "#3d5a6c"
+
+[colors.cursor]
+text   = "#f5e7b8"
+cursor = "#c1512e"
+
+[colors.selection]
+text       = "#f5e7b8"
+background = "#c1512e"
+
+# Color7 is lighter than Color7Intense here on purpose — that inversion comes
+# straight from the KDE scheme, and it is what keeps "bright white" legible on
+# a cream ground instead of vanishing into it.
+[colors.normal]
+black   = "#3d5a6c"
+red     = "#c1512e"
+green   = "#5f7a52"
+yellow  = "#96712a"
+blue    = "#4a7a96"
+magenta = "#8c5a7a"
+cyan    = "#3d7a82"
+white   = "#5a7284"
+
+[colors.bright]
+black   = "#5a7284"
+red     = "#d66640"
+green   = "#769664"
+yellow  = "#ba923a"
+blue    = "#5e94b2"
+magenta = "#a86e92"
+cyan    = "#4e949e"
+white   = "#3d5a6c"

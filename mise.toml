@@ -46,6 +46,14 @@ dotfiles.default_mode = "symlink"
 "~/.zprofile"                        = "zsh/zprofile"
 "~/.zshrc"                           = "zsh/zshrc"
 
+# The two alacritty palettes. theme-sync reads them from these fixed paths
+# rather than from the repo, which is what keeps the script independent of
+# where the repo is checked out. ~/.config/alacritty/colors.toml — the one
+# alacritty.toml actually imports — is generated, so it is deliberately absent
+# from this table; see theme-sync/theme-sync.
+"~/.config/alacritty/colors-day.toml"   = "alacritty/colors-day.toml"
+"~/.config/alacritty/colors-night.toml" = "alacritty/colors-night.toml"
+
 # Git identity is machine-local, so this one is rendered rather than symlinked.
 # The cost, and it is a real one: `git config --global ...` writes to the
 # rendered file and is overwritten on the next apply. To keep such a change,
@@ -79,6 +87,31 @@ dotfiles.default_mode = "symlink"
 # that variant into mise.macos.toml needs [dotfiles] to merge additively across
 # configs, which mise does not document — verify before splitting this table.
 "~/.config/Code/User/keybindings.json" = "vscode/keybindings.json"
+
+# -----------------------------------------------------------------------------
+# Day/night theming.
+#
+# The switch is Plasma's own — mise.linux.toml sets AutomaticLookAndFeel, and
+# KWin's sunrise/sunset schedule drives it. These entries only supply the two
+# palettes it switches between, plus the one daemon that carries the change
+# into alacritty. Zed needs nothing here: "mode": "system" makes it follow the
+# XDG portal directly.
+#
+# Targets are ~/.local/share, not ~/.config, so this is the one place the
+# "directory named for its target under ~/.config" convention does not hold.
+# KDE looks for these packages nowhere else.
+# -----------------------------------------------------------------------------
+"~/.local/share/color-schemes/CellTower.colors"      = "plasma/color-schemes/CellTower.colors"
+"~/.local/share/color-schemes/CellTowerNight.colors" = "plasma/color-schemes/CellTowerNight.colors"
+
+# Whole-directory symlinks: a look-and-feel package is a fixed tree that KDE
+# reads and never writes, so unlike ~/.config/mise there is no state to keep
+# local and no reason to link file-by-file.
+"~/.local/share/plasma/look-and-feel/com.nickseldner.celltower.day"   = "plasma/look-and-feel/com.nickseldner.celltower.day"
+"~/.local/share/plasma/look-and-feel/com.nickseldner.celltower.night" = "plasma/look-and-feel/com.nickseldner.celltower.night"
+
+"~/.local/bin/theme-sync"                   = "theme-sync/theme-sync"
+"~/.config/systemd/user/theme-sync.service" = "theme-sync/theme-sync.service"
 
 # -----------------------------------------------------------------------------
 # Git repos — replaces the TPM clone in the old install.sh

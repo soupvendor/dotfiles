@@ -26,7 +26,7 @@
     }
   },
   "icon_theme": {
-    "mode": "light",
+    "mode": "system",
     "light": "Zed (Default)",
     "dark": "Zed (Default)"
   },
@@ -36,9 +36,14 @@
   // Installed by the bootstrap — a cask on macOS, the release zip in
   // mise.linux.toml's final hook. Same face alacritty and tmux use.
   "buffer_font_family": "JetBrainsMono Nerd Font",
+  // "system" makes Zed follow the desktop rather than pick for itself: it
+  // subscribes to the XDG portal's org.freedesktop.appearance color-scheme and
+  // repaints when it changes. Plasma flips that at sunset (see plasma/ and the
+  // AutomaticLookAndFeel key), so both entries below are live and nothing here
+  // needs a timer of its own.
   "theme": {
-    "mode": "light",
+    "mode": "system",
     "light": "Cell Tower",
-    "dark": "Gruvbox Dark"
+    "dark": "Cell Tower Night"
   }
 }

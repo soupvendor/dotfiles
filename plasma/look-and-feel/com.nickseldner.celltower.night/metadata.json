@@ -1,0 +1,17 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "nickseldner@gmail.com",
+                "Name": "Nick Seldner"
+            }
+        ],
+        "Category": "",
+        "Description": "Cell Tower inverted — slate ground, cream ink, the same rust accent",
+        "Id": "com.nickseldner.celltower.night",
+        "License": "MIT",
+        "Name": "Cell Tower Night",
+        "Version": "1.0"
+    }
+}
