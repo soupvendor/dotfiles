@@ -5,6 +5,15 @@
 # ~/.config/alacritty/colors.toml, which alacritty.toml imports and which
 # alacritty's file watcher reloads live. See theme-sync/ for the mechanism.
 
+# Not colors, but the palette owns them anyway, so they have to be set here:
+# alacritty.toml loads last and would win. See its header.
+[window]
+# A dark ground hides what is behind it, so night carries the transparency the
+# cream half cannot. Still restrained — enough for the window to sit in the
+# desktop rather than on top of it, not enough to read through.
+opacity = 0.93
+decorations_theme_variant = "Dark"
+
 [colors.primary]
 background = "#22323d"
 foreground = "#f0e3bc"
@@ -15,6 +24,39 @@ cursor = "#ee7f52"
 
 [colors.selection]
 text       = "#22323d"
+background = "#d66640"
+
+# Blue for vi mode, same reason as in the day file: it has to be the one thing
+# the rust cursor could never be mistaken for.
+[colors.vi_mode_cursor]
+text   = "#22323d"
+cursor = "#5e94b2"
+
+# alacritty's own chrome. Left unset these fall back to base16 greys and reds
+# that belong to no theme; on the slate ground the default footer bar is a
+# white slab. See the day file.
+[colors.search.matches]
+foreground = "#22323d"
+background = "#c9bd9a"
+
+[colors.search.focused_match]
+foreground = "#22323d"
+background = "#ee7f52"
+
+[colors.hints.start]
+foreground = "#22323d"
+background = "#d4a24a"
+
+[colors.hints.end]
+foreground = "#22323d"
+background = "#c9bd9a"
+
+[colors.footer_bar]
+foreground = "#f0e3bc"
+background = "#354a59"
+
+[colors.line_indicator]
+foreground = "#22323d"
 background = "#d66640"
 
 [colors.normal]

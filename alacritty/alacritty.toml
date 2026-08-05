@@ -8,6 +8,11 @@
 # terminal would never change. Keeping this file colorless is what makes the
 # import authoritative.
 #
+# The same rule governs two settings that are not colors but belong to the
+# palette anyway — `window.opacity` and `window.decorations_theme_variant`.
+# Both are set per variant, so both are deliberately absent below. Writing
+# either one here would pin it across the day/night switch.
+#
 # colors.toml is generated, so it is not a [dotfiles] symlink — theme-sync
 # writes it in place, and alacritty's watcher picks up the write and repaints
 # every open window. live_config_reload defaults to true; do not turn it off.
@@ -19,9 +24,18 @@ import = ["~/.config/alacritty/colors.toml"]
 TERM = "xterm-256color"
 
 [window]
+# Cells, not pixels: 128x40 at 12.5pt lands near 1300x850, a working window on
+# the ultrawide that still fits the rotated panel. This sizes NEW windows only,
+# and the value is read at startup — a running alacritty ignores a change here.
+dimensions = { columns = 128, lines = 40 }
 padding = { x = 12, y = 12 }
+# A window is rarely an exact multiple of the cell size, and the remainder
+# otherwise piles up on the right and bottom edges. Spread it instead, so the
+# text block stays centred in its frame at any size.
+dynamic_padding = true
 # decorations = "Buttonless"  # macOS only; remove on Linux
-opacity = 1.0
+# opacity and decorations_theme_variant live in the palette files — see header.
+blur = true
 startup_mode = "Windowed"
 
 [scrolling]
@@ -31,7 +45,7 @@ history = 10000
 normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
 bold   = { family = "JetBrainsMono Nerd Font", style = "Bold" }
 italic = { family = "JetBrainsMono Nerd Font", style = "Italic" }
-size = 14.0
+size = 12.5
 
 [cursor]
 style = { shape = "Block", blinking = "On" }

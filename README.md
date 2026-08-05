@@ -223,6 +223,15 @@ dark instead of the desktop changing its mind.
 every JSON file under `~/.config/zed/themes` and hot-reloads on save, so editing
 the repo restyles the running editor.
 
+Window frames are not configured per app. KWin draws them server-side from the
+`[WM]` block of the active colour scheme, which is why a focused window wears a
+rust titlebar in both halves and the terminal's frame changes with everything
+else. `alacritty/colors-*.toml` still sets `decorations_theme_variant`, for the
+compositors that hand the frame back to the client instead. Inside the window,
+the chrome alacritty draws itself — search highlights, hint labels, the footer
+bar, the position indicator — is themed in the same two files; left unset those
+fall back to base16 greys and reds that match neither half.
+
 The syntax colours deliberately do **not** reuse the desktop palette. Those
 values were mixed for UI chrome and land around 2–4:1 against their own
 background, which reads as washed out in a code buffer. Both syntax sets are
@@ -284,7 +293,13 @@ Useful to know:
 - **alacritty's import precedence is backwards from the obvious guess** —
   imports load first and the *importing* file loads last, so `alacritty.toml`
   deliberately contains no `[colors]` block. Putting one back would silently
-  pin the terminal to one palette forever.
+  pin the terminal to one palette forever. The same holds for the two
+  non-colour keys the palette owns, `window.opacity` and
+  `window.decorations_theme_variant`: they live in the palette files, so
+  `alacritty.toml` must not set them either.
+- **Day is held more opaque than night** (`0.97` against `0.93`). A bright
+  ground shows the desktop behind it far more readily than a dark one, and
+  cream stops reading as paper the moment anything comes through it.
 - **There is no fade.** Nothing on Wayland can crossfade unrelated app windows
   between two colour schemes; each surface repaints in one frame. What is
   gradual is Night Light's temperature ramp, which is already well underway by
