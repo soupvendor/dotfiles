@@ -4,6 +4,19 @@
 # ~/.config/alacritty/colors.toml, which alacritty.toml imports and which
 # alacritty's file watcher reloads live. See theme-sync/ for the mechanism.
 
+# Not colors, but the palette owns them anyway, so they have to be set here:
+# alacritty.toml loads last and would win. See its header.
+[window]
+# Paper only reads as paper when it is nearly solid — a bright ground shows
+# whatever is behind it far more readily than a dark one, so day is held
+# almost opaque where night can afford some depth.
+opacity = 0.97
+# KWin draws server-side decorations from the Plasma scheme, so on this desktop
+# the frame already follows the theme and this is a no-op. It matters on
+# compositors that hand the frame back to the client, where alacritty would
+# otherwise pick a dark titlebar to sit above a cream terminal.
+decorations_theme_variant = "Light"
+
 [colors.primary]
 background = "#f5e7b8"
 foreground = "#3d5a6c"
@@ -14,6 +27,45 @@ cursor = "#c1512e"
 
 [colors.selection]
 text       = "#f5e7b8"
+background = "#c1512e"
+
+# Vi mode gets blue rather than rust: the cursor changing colour is the only
+# signal that keys mean something different now, and it has to be unmistakable
+# against the rust of a normal cursor.
+[colors.vi_mode_cursor]
+text   = "#f5e7b8"
+cursor = "#4a7a96"
+
+# Everything below is chrome alacritty paints itself, and every one of these
+# defaults to a base16 value — a grey footer bar and a red search highlight
+# that have nothing to do with this palette. Unset, they are the one part of
+# the terminal that does not follow the theme.
+#
+# Full ink rather than the dimmer slate: search results are text you actually
+# read, and cream on #5a7284 lands at 4.1:1, under the floor the rest of the
+# theme holds to. Ink puts it at 5.9:1.
+[colors.search.matches]
+foreground = "#f5e7b8"
+background = "#3d5a6c"
+
+[colors.search.focused_match]
+foreground = "#f5e7b8"
+background = "#c1512e"
+
+[colors.hints.start]
+foreground = "#f5e7b8"
+background = "#96712a"
+
+[colors.hints.end]
+foreground = "#f5e7b8"
+background = "#5a7284"
+
+[colors.footer_bar]
+foreground = "#f5e7b8"
+background = "#3d5a6c"
+
+[colors.line_indicator]
+foreground = "#f5e7b8"
 background = "#c1512e"
 
 # Color7 is lighter than Color7Intense here on purpose — that inversion comes
