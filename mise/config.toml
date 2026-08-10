@@ -76,3 +76,5 @@ just = "latest" # for other people's Justfiles; this repo uses [tasks]
 
 # TOML formatter/linter for this repo — see ../.taplo.toml and `mise run fmt`
 taplo = "latest"
+aws = { version = "latest", symlink_bins = "true" }
+dive = "latest"

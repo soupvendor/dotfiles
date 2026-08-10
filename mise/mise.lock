@@ -16,6 +16,16 @@ url = "https://github.com/atuinsh/atuin/releases/download/v18.18.1/atuin-aarch64
 url_api = "https://api.github.com/repos/atuinsh/atuin/releases/assets/492109389"
 provenance = "github-attestations"
 
+[[tools.aws]]
+version = "2.36.18"
+backend = "aqua:aws/aws-cli"
+
+[tools.aws."platforms.linux-x64"]
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.36.18.zip"
+
+[tools.aws."platforms.macos-arm64"]
+url = "https://awscli.amazonaws.com/AWSCLIV2-2.36.18.pkg"
+
 [[tools.bat]]
 version = "0.26.1"
 backend = "aqua:sharkdp/bat"
@@ -57,6 +67,20 @@ url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/274610548"
 checksum = "sha256:4f569f3a36732bfd8b8fea7bfcc6ad87a59745c109022164d0ca4832451d5369"
 url = "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.darwin-arm64"
 url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/274610544"
+
+[[tools.dive]]
+version = "0.13.1"
+backend = "aqua:wagoodman/dive"
+
+[tools.dive."platforms.linux-x64"]
+checksum = "sha256:0970549eb4a306f8825a84145a2534153badb4d7dcf3febd1967c706367c3d0e"
+url = "https://github.com/wagoodman/dive/releases/download/v0.13.1/dive_0.13.1_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/wagoodman/dive/releases/assets/241842462"
+
+[tools.dive."platforms.macos-arm64"]
+checksum = "sha256:38b7fa95a13e7f4d0b3060c875fe7427c2a0613ecff674bb45156eb34bca0b09"
+url = "https://github.com/wagoodman/dive/releases/download/v0.13.1/dive_0.13.1_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/wagoodman/dive/releases/assets/241842465"
 
 [[tools.eza]]
 version = "0.23.5"

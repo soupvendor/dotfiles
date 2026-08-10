@@ -12,6 +12,9 @@
 // ~/.config/zed/themes/. Zed loads every JSON file in that directory and
 // hot-reloads on save.
 {
+  "edit_predictions": {
+    "provider": "zed"
+  },
   "telemetry": {
     "diagnostics": true,
     "metrics": false,
